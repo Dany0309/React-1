@@ -1,18 +1,12 @@
 import React from "react";
-import ReactPaginate from "react-paginate";
 import Sort from "../components/Sort";
 import Categories from "../components/Categories";
 import PizzaBlock from "../components/PizzaBlock";
-import Skeleton from "../components/PizzaBlock/Skeleton";
-import Pagination from "../components/Pagination";
-import { SearchContext } from "../App";
 
 const Home = () => {
-  const { searchValue} = React.useContext(SearchContext);
   const [items, setItems] = React.useState([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [categoryId, setCategoryId] = React.useState(0);
-  const [currentPage, setCurrentPage] = React.useState(0);
   const [sortType, setSortType] = React.useState({
     name: "популярности",
     sortProperty: "rating",
@@ -21,7 +15,7 @@ const Home = () => {
   React.useEffect(() => {
     setIsLoading(true);
     fetch(
-      `https://657922a4f08799dc8046654e.mockapi.io/react-pizza?page=${currentPage}&limit=4&${
+      `https://3d3594b01633b18c.mokky.dev/items?${
         categoryId > 0 ? `category=${categoryId}` : ""
       }&sortBy=${sortType.sortProperty}`
     )
@@ -32,19 +26,18 @@ const Home = () => {
         setItems(json);
         setIsLoading(false);
       });
-  }, [categoryId, setSortType, searchValue, currentPage]);
+  }, [categoryId, sortType.setSortType]);
 
-  const pizzas = items
-    .filter((obj) => {
-      if (obj.title.toLowerCase().includes(searchValue.toLowerCase())) {
-        return true;
-      }
-      return false;
-    })
-    .map((obj) => <PizzaBlock key={obj.id} {...obj} />);
-  const skeletons = [...new Array(6)].map((_, index) => (
-    <Skeleton key={index} />
-  ));
+  const sortedItems = items.sort((a, b) => {
+    if (sortType.sortProperty === "rating") {
+      return b.rating - a.rating; // Сортировка по популярности
+    } else if (sortType.sortProperty === "price") {
+      return a.price - b.price; // Сортировка по цене
+    } else if (sortType.sortProperty === "title") {
+      return a.title.localeCompare(b.title); // Сортировка по алфавиту
+    }
+    return 0;
+  });
   return (
     <>
       <div className="content__top">
@@ -55,9 +48,17 @@ const Home = () => {
         <Sort value={sortType} setSortType={(i) => setSortType(i)} />
       </div>
       <h2 className="content__title">Все пиццы</h2>
-      <div className="content__items">{isLoading ? skeletons : pizzas}</div>
-      <Pagination onChangePage={(number)=>setCurrentPage(number)}/>
+      <div className="content__items">
+        {isLoading ? (
+          items.map((obj) => <PizzaBlock key={obj.id} {...obj} />)
+        ) : sortedItems.length > 0 ? (
+          sortedItems.map((obj) => <PizzaBlock key={obj.id} {...obj} />)
+        ) : (
+          <p>Пицц пока нет</p> // Отображаем сообщение, если пицц нет
+        )}
+      </div>
     </>
   );
 };
+
 export default Home;
