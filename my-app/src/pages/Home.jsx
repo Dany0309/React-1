@@ -1,5 +1,4 @@
-import React from "react";
-import ReactPaginate from "react-paginate";
+import React from "react"; 
 import Sort from "../components/Sort";
 import Categories from "../components/Categories";
 import PizzaBlock from "../components/PizzaBlock";
